@@ -6,7 +6,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "comm/can_node.h"
 #include "config/app_config.h"
 #include "core/log.h"
 #include "core/mailbox.h"
@@ -363,14 +362,6 @@ void *collect_thread(void *arg)
                        &prev_accel_y,
                        &prev_accel_z);
         collect_weather(&sample);
-
-        can_network_status_t can_st;
-        can_status_copy(&can_st);
-        sample.can_f103_online = can_st.f103.online;
-        sample.can_f407_online = can_st.f407.online;
-        sample.can_f103_hb = can_st.f103.heartbeat_counter;
-        sample.can_f407_hb = can_st.f407.heartbeat_counter;
-
         update_alcohol_alarm(&sample,
                              &alcohol_alarm_active,
                              &alcohol_high_count,

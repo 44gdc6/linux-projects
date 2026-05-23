@@ -167,34 +167,6 @@ void my_timer(lv_timer_t *timer)
             lv_obj_set_style_text_color(ui_stateLabel, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(ui_alarmLabel, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN | LV_STATE_DEFAULT);
         }
-
-        {
-            char canbuff[64];
-
-            sprintf(canbuff, "%s  HB:%u",
-                    tmpdata.can_f103_online ? "ONLINE" : "OFFLINE",
-                    tmpdata.can_f103_hb);
-            lv_label_set_text(ui_LabelF103, canbuff);
-            if (tmpdata.can_f103_online) {
-                lv_obj_set_style_text_color(ui_LabelF103, lv_palette_main(LV_PALETTE_GREEN),
-                                            LV_PART_MAIN | LV_STATE_DEFAULT);
-            } else {
-                lv_obj_set_style_text_color(ui_LabelF103, lv_palette_main(LV_PALETTE_RED),
-                                            LV_PART_MAIN | LV_STATE_DEFAULT);
-            }
-
-            sprintf(canbuff, "%s  HB:%u",
-                    tmpdata.can_f407_online ? "ONLINE" : "OFFLINE",
-                    tmpdata.can_f407_hb);
-            lv_label_set_text(ui_LabelF407, canbuff);
-            if (tmpdata.can_f407_online) {
-                lv_obj_set_style_text_color(ui_LabelF407, lv_palette_main(LV_PALETTE_GREEN),
-                                            LV_PART_MAIN | LV_STATE_DEFAULT);
-            } else {
-                lv_obj_set_style_text_color(ui_LabelF407, lv_palette_main(LV_PALETTE_RED),
-                                            LV_PART_MAIN | LV_STATE_DEFAULT);
-            }
-        }
     }
 
     refresh_weather_roller_if_needed();

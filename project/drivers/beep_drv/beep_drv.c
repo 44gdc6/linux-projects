@@ -2,7 +2,6 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/cdev.h>
-#include <linux/kernel.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>
 #include <linux/device.h>
@@ -16,40 +15,23 @@ static beep_drv_t *pbeepcfg;
 
 static ssize_t beep_show(struct device *dev, struct device_attribute *attr, char *buf)
 {   
-    ssize_t len = 0;
-
-    (void)dev;
-    (void)attr;
-
-    if (pbeepcfg == NULL) {
-        return -ENODEV;
-    }
-
     mutex_lock(&pbeepcfg->lock);
     if (BEEP_ON == pbeepcfg->curbeepstat) {
-        len = scnprintf(buf, PAGE_SIZE, "BEEP_ON\n");
-    } else {
-        len = scnprintf(buf, PAGE_SIZE, "BEEP_OFF\n");
+        pr_info("BEEP_ON\n");
+    }
+    else if (BEEP_OFF == pbeepcfg->curbeepstat) {
+        pr_info("BEEP_OFF\n");
     }
     mutex_unlock(&pbeepcfg->lock);
 
-    return len;
+    return 0;
 }
 
 static ssize_t beep_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
     char tmpbuff[32] = {0};
 
-    (void)dev;
-    (void)attr;
-
-    if (pbeepcfg == NULL) {
-        return -ENODEV;
-    }
-
-    if (sscanf(buf, "%31s", tmpbuff) != 1) {
-        return -EINVAL;
-    }
+    sscanf(buf, "%s", tmpbuff);
 
     mutex_lock(&pbeepcfg->lock);
     if (0 == strcmp(tmpbuff, "BEEP_ON")) {
@@ -58,9 +40,6 @@ static ssize_t beep_store(struct device *dev, struct device_attribute *attr, con
     } else if (0 == strcmp(tmpbuff, "BEEP_OFF")) {
         gpio_set_value(pbeepcfg->gpiono, 1);
         pbeepcfg->curbeepstat = BEEP_OFF;
-    } else {
-        mutex_unlock(&pbeepcfg->lock);
-        return -EINVAL;
     }
     mutex_unlock(&pbeepcfg->lock);
 
@@ -78,87 +57,58 @@ static struct device_attribute beep_attr = {
 
 static int beep_open(struct inode *node, struct file *fp)
 {
-    (void)node;
-    (void)fp;
-    pr_info("beep device opened\n");
+    pr_info("Kernel:beep open success\n");
 
     return 0;
 }
 
 static int beep_close(struct inode *node, struct file *fp)
 {
-    (void)node;
-    (void)fp;
-    pr_info("beep device closed\n");
+    pr_info("Kernel:beep close success\n");
 
     return 0;
 }
 
 static ssize_t beep_read(struct file *fp, char __user *puser, size_t n, loff_t *off)
 {
-    int state = 0;
-
-    (void)fp;
-    (void)off;
-
-    if (pbeepcfg == NULL) {
-        return -ENODEV;
+    unsigned long nret = 0;
+    
+    nret = copy_to_user(puser, &pbeepcfg->curbeepstat, 4);
+    if (nret != 0) {
+        pr_info("copy_to_user failed\n");
+        return -1;
     }
 
-    if (n < sizeof(state)) {
-        return -EINVAL;
-    }
+    pr_info("Kernel:beep read success\n");
 
-    mutex_lock(&pbeepcfg->lock);
-    state = pbeepcfg->curbeepstat;
-    mutex_unlock(&pbeepcfg->lock);
-
-    if (copy_to_user(puser, &state, sizeof(state)) != 0) {
-        pr_err("beep copy_to_user failed\n");
-        return -EFAULT;
-    }
-
-    pr_info("beep state read\n");
-
-    return sizeof(state);
+    return 0;
 }
 
 static ssize_t beep_write(struct file *fp, const char __user *puser, size_t n, loff_t *off)
 {
     int setstat = 0;
-
-    (void)fp;
-    (void)off;
-
-    if (pbeepcfg == NULL) {
-        return -ENODEV;
-    }
-
-    if (n < sizeof(setstat)) {
-        return -EINVAL;
-    }
-
-    if (copy_from_user(&setstat, puser, sizeof(setstat)) != 0) {
-        pr_err("beep copy_from_user failed\n");
-        return -EFAULT;
+    unsigned long nret = 0;
+    
+    nret = copy_from_user(&setstat, puser, 4);
+    if (nret != 0) {
+        pr_info("copy_from_user failed\n");
+        return -1;
     }
 
     mutex_lock(&pbeepcfg->lock);
     if (BEEP_ON == setstat) {
         gpio_set_value(pbeepcfg->gpiono, 0);
         pbeepcfg->curbeepstat = BEEP_ON;
-    } else if (BEEP_OFF == setstat) {
+    }
+    else if (BEEP_OFF == setstat) {
         gpio_set_value(pbeepcfg->gpiono, 1);
         pbeepcfg->curbeepstat = BEEP_OFF;
-    } else {
-        mutex_unlock(&pbeepcfg->lock);
-        return -EINVAL;
     }
     mutex_unlock(&pbeepcfg->lock);
 
-    pr_info("beep state updated\n");
+    pr_info("Kernel:beep write success\n");
 
-    return sizeof(setstat);
+    return 0;
 }
 
 static struct file_operations fops = {
@@ -179,86 +129,82 @@ static int __init beep_drv_init(void)
 {
     int ret = 0;
 
+    //1.构建beep信息的空间
     pbeepcfg = kmalloc(sizeof(*pbeepcfg), GFP_KERNEL);
     if (NULL == pbeepcfg) {
-        pr_err("kmalloc pbeepcfg failed\n");
-        return -ENOMEM;
+        pr_info("kmalloc pbeepcfg failed\n");
+        goto err_kmalloc;
     }
 
+    //2.构建对设备操作的方法
     pbeepcfg->pbeepmisc = &beep_misc;
 
+    //3.注册混杂设备
     ret = misc_register(&beep_misc);
     if (ret != 0) {
-        pr_err("beep misc_register failed: %d\n", ret);
+        pr_info("misc register failed\n");
         goto err_mis_register;
     }
 
+    //3.初始化锁资源
     mutex_init(&pbeepcfg->lock);
 
+    //4.找到设备树中的putebeep节点
     pbeepcfg->pnode = of_find_node_by_path("/putebeep");
     if (NULL == pbeepcfg->pnode) {
-        pr_err("of_find_node_by_path failed\n");
-        ret = -ENODEV;
+        pr_info("of_find_node_by_path failed\n");
         goto err_find_resource;
     }
 
+    //5.获取节点中gpio-beep属性对应的GPIO编号
     pbeepcfg->gpiono = of_get_named_gpio(pbeepcfg->pnode, "gpio-beep", 0);
     if (pbeepcfg->gpiono < 0) {
-        pr_err("get gpio-beep failed: %d\n", pbeepcfg->gpiono);
-        ret = pbeepcfg->gpiono;
+        pr_info("get gpio-beep failed\n");
         goto err_find_resource;
     }
 
+    //6.注册gpio的使用权
     ret = devm_gpio_request(beep_misc.this_device, pbeepcfg->gpiono, "beep_drv");
     if (ret != 0) {
-        pr_err("devm_gpio_request failed: %d\n", ret);
+        pr_info("devm_gpio_request failed\n");
         goto err_find_resource;
     }
 
+    //7.设置gpio输出高电平
     gpio_direction_output(pbeepcfg->gpiono, 1);
     pbeepcfg->curbeepstat = BEEP_OFF;
 
+    //8.增加sys调节节点
     ret = device_create_file(beep_misc.this_device, &beep_attr);
     if (ret != 0) {
-        pr_err("device_create_file failed: %d\n", ret);
-        goto err_find_resource;
+        pr_info("device_create_file failed\n");
+        return -1;
     }
 
-    pr_info("beep probe success, device /dev/%s ready\n", beep_misc.name);
+    pr_info("major:%d, minor:%d\n", MAJOR(beep_misc.this_device->devt), MINOR(beep_misc.this_device->devt));
+
+    pr_info("beep_drv_init success!\n");
 
     return 0;
 
 err_find_resource:
-    if (pbeepcfg->pnode != NULL) {
-        of_node_put(pbeepcfg->pnode);
-    }
-    mutex_destroy(&pbeepcfg->lock);
     misc_deregister(&beep_misc);
 err_mis_register:
     kfree(pbeepcfg);
-    pbeepcfg = NULL;
-    return ret;
+err_kmalloc:
+    return -1;
 }
 
 static void __exit beep_drv_exit(void)
 {
-    if (pbeepcfg == NULL) {
-        return;
-    }
-
     device_remove_file(beep_misc.this_device, &beep_attr);
 
     mutex_destroy(&pbeepcfg->lock);
 
-    if (pbeepcfg->pnode != NULL) {
-        of_node_put(pbeepcfg->pnode);
-    }
-
     misc_deregister(&beep_misc);
     kfree(pbeepcfg);
-    pbeepcfg = NULL;
 
-    pr_info("beep driver unregistered\n");
+    pr_info("beep_drv_exit success!\n");
 
     return;
 }

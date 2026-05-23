@@ -7,17 +7,35 @@
 *.o
 *.a
 *.so
+*.so.*
 *.out
 *.elf
 *.bin
+*.exe
+*.ko
+*.mod.c
+*.mod
+*.symvers
+*.order
+*.la
+demo
+
+# Kernel build artifacts
+Module.symvers
+modules.order
 
 # Keil MDK
 Objects/
 Listings/
 *.uvguix.*
-*.uvoptx
 JLinkLog.txt
 *.scvd
+
+# Distribution binaries (precompiled libs extras)
+project/lib/test/
+project/lib/samples/
+project/lib/ssl/
+project/lib/pkgconfig/
 
 # OS
 Thumbs.db

@@ -45,7 +45,6 @@ APP_CSRCS += src/device/beep_control.c
 APP_CSRCS += src/service/collect.c
 APP_CSRCS += src/service/weather.c
 APP_CSRCS += src/comm/mqtt.c
-APP_CSRCS += src/comm/can_node.c
 APP_CSRCS += src/storage/sqlite.c
 APP_CSRCS += src/ui/lvgl_user.c
 APP_CSRCS += ui/mouse_cursor_icon.c

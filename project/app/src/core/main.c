@@ -1,7 +1,6 @@
 #include <pthread.h>
 #include <stdio.h>
 
-#include "comm/can_node.h"
 #include "comm/mqtt.h"
 #include "config/app_config.h"
 #include "core/log.h"
@@ -33,8 +32,6 @@ int main(void)
     LOG_INFO("thread registered: %s", "sqlite_thread");
     mailbox_add_task("mqtt_thread", mqtt_thread);
     LOG_INFO("thread registered: %s", "mqtt_thread");
-    mailbox_add_task("can_thread", can_thread);
-    LOG_INFO("thread registered: %s", "can_thread");
 
     mailbox_waitall_thread_end();
 

@@ -57,14 +57,6 @@ extern lv_obj_t * ui_Label19;
 extern lv_obj_t * ui_weatherDateDropdown;
 extern lv_obj_t * ui_Panel15;
 extern lv_obj_t * ui_weekLabel;
-extern lv_obj_t * ui_Panel18;
-extern lv_obj_t * ui_Label6;
-extern lv_obj_t * ui_Label7;
-extern lv_obj_t * ui_Label8;
-extern lv_obj_t * ui_Panel20;
-extern lv_obj_t * ui_LabelF407;
-extern lv_obj_t * ui_Panel21;
-extern lv_obj_t * ui_LabelF103;
 // CUSTOM VARIABLES
 
 #ifdef __cplusplus

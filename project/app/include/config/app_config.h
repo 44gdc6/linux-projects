@@ -47,7 +47,4 @@
 #define MOTION_ALARM_ASSERT_COUNT 3
 #define MOTION_ALARM_CLEAR_COUNT 3
 
-#define CAN_INTERFACE_NAME      "can0"
-#define CAN_NODE_TIMEOUT_MS     3000
-
 #endif
