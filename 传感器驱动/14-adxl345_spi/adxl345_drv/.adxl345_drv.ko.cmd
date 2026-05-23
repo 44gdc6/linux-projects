@@ -1,0 +1,1 @@
+cmd_/home/linux/20260107/驱动/14-adxl345_spi/adxl345_drv/adxl345_drv.ko := arm-linux-gnueabihf-ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /home/linux/20260107/驱动/14-adxl345_spi/adxl345_drv/adxl345_drv.ko /home/linux/20260107/驱动/14-adxl345_spi/adxl345_drv/adxl345_drv.o /home/linux/20260107/驱动/14-adxl345_spi/adxl345_drv/adxl345_drv.mod.o

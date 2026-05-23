@@ -1,0 +1,28 @@
+# IDE / Editor
+.vscode/
+.claude/
+.codebuddy/
+
+# Build outputs
+*.o
+*.a
+*.so
+*.out
+*.elf
+*.bin
+
+# Keil MDK
+Objects/
+Listings/
+*.uvguix.*
+*.uvoptx
+JLinkLog.txt
+*.scvd
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Python
+__pycache__/
+*.pyc

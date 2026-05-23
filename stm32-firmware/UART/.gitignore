@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+
+# Keil user/local files
+*.uvgui.*
+*.uvopt
+*.uvoptx
+
+# Keil build outputs
+*.axf
+*.bin
+*.crf
+*.d
+*.dep
+*.hex
+*.htm
+*.lst
+*.map
+*.o
+
+# Local build folders
+MDK-ARM/UART/
+

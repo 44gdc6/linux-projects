@@ -1,0 +1,2 @@
+/home/linux/20260107/驱动/17-platform_dht11/dht11_drv/dht11_drv.ko
+/home/linux/20260107/驱动/17-platform_dht11/dht11_drv/dht11_drv.o

@@ -1,0 +1,16 @@
+{
+  "codename": "FontHeiTi",
+  "ttf_path": "/assets/simhei.ttf",
+  "bin_path": "/assets\\ui_font_FontHeiTi.bin",
+  "c_path": "/assets\\ui_font_FontHeiTi.c",
+  "cfg_path": "/assets\\ui_font_FontHeiTi.fcfg",
+  "size": 16,
+  "bpp": 4,
+  "letters": 0,
+  "ranges": [
+    "0x20-0x7f"
+  ],
+  "symbols": "中文简体增加减小下一页返回翻译标题",
+  "customparams": "--no-compress --no-prefilter",
+  "uploaded": false
+}

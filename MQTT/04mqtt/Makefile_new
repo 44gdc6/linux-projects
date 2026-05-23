@@ -1,0 +1,16 @@
+DST=all
+SRC=main.c
+CC=gcc 
+FLAG=-g -lpaho-mqtt3c -lrt 
+LIBS+= -L/home/linux/nfs/rootfs_imx/paho.mqtt.c-master/build/output 
+LIBS+= -L/home/linux/nfs/rootfs_imx/openssl-1.0.0s/__install/lib 
+#LIBS+= -L/home/linux/nfs/ssl_lib 
+INC+=-I /home/linux/nfs/rootfs_imx/openssl-1.0.0s/__install/include 
+INC+=-I /home/linux/nfs/rootfs_imx/paho.mqtt.c-master/src 
+
+$(DST):$(SRC)
+	$(CC) $(SRC) $(FLAG) -o $(DST)
+arm:$(SRC)
+	arm-linux-gnueabihf-gcc $(SRC) $(FLAG)  $(LIBS) $(INC) -lssl -lcrypto
+clean:
+	rm $(DST)
