@@ -4,7 +4,7 @@
 在一条 `500 kbps` 的 CAN 总线上接入 `i.MX6ULL`、`STM32F103 + TJA1050`、`STM32F407 + TJA1050` 三个节点，实现主站定向发命令、F103/F407 按节点 ID 应答，并保留两块 STM32 的串口调试能力。
 
 ## 当前阶段
-阶段 5：等待硬件联调
+阶段 9：等待硬件联调（仓库已就绪，代码已推送 GitHub）
 
 ## 各阶段
 ### 阶段 1：现状整理与协议定稿
@@ -36,14 +36,27 @@
 - [x] 更新测试并重新编译
 - **状态：** complete
 
-### 阶段 5：i.MX6ULL 多节点联调
+### 阶段 7：仓库整合与清理
+- [x] 将 CubemxProject (F407 + UART) 整合到 linux_projects/stm32-firmware/
+- [x] 创建 .gitignore 排除编译产物
+- [x] 清理已误提交的 .exe .ko .mod.c 等编译产物
+- [x] 补齐遗漏的源文件（MQTT/OpenSSL 头文件、LVGL 源码等）
+- [x] 配置 git 代理并推送至 GitHub
+- [x] 编写完整 README（架构图、线程模型、驱动接口表、CAN 协议、构建步骤）
+- **状态：** complete
+
+### 阶段 8：Superpowers 技能安装
+- [x] 通过 npx superpowers-zh 安装 20 个 AI 编程技能到用户级 ~/.claude/skills/
+- **状态：** complete
+
+### 阶段 9：i.MX6ULL 多节点联调
 - [ ] 统一总线波特率、终端电阻、公共地
-- [ ] 用 `candump` 观察心跳帧
-- [ ] 用 `cansend` 分别向 F103/F407 发定向命令
+- [ ] 用 candump 观察心跳帧
+- [ ] 用 cansend 分别向 F103/F407 发定向命令
 - [ ] 验证两个节点均可独立应答、互不串帧
 - **状态：** pending
 
-### 阶段 6：稳定性验证与收尾
+### 阶段 10：稳定性验证与收尾
 - [ ] 验证重复收发、掉线恢复、错误日志
 - [ ] 记录接线与排查要点
 - [ ] 回填 `progress.md` 中的实测结果
@@ -69,5 +82,6 @@
 
 ## 备注
 - 已完成 `F407` 与 `UART(F103)` 两边的代码实现和本地测试/编译验证。
-- 规划文件与正式设计/实现计划均放在 `d:\CubemxProject\F407` 下，后续编码也以 `F407` 工程为主。
+- 规划文件与正式设计/实现计划均放在 `stm32-firmware/F407/docs/` 下。
 - `UART` 工程中的 F103 已按统一协议回改，当前剩余工作集中在 `i.MX6ULL` 侧硬件联调。
+- 2026-05-24：仓库已整合推送到 [https://github.com/44gdc6/linux-projects](https://github.com/44gdc6/linux-projects)。

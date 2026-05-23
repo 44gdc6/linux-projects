@@ -1,5 +1,41 @@
 # 进度日志
 
+## 会话：2026-05-24
+
+### 阶段 7：仓库整合与 GitHub 发布
+- **状态：** complete
+- **开始时间：** 2026-05-24
+- 执行的操作：
+  - 将 `CubemxProject`（F407 + UART）整合到 `linux_projects/stm32-firmware/`，统一为一个仓库
+  - 创建 `.gitignore`，排除编译产物（`*.exe` `*.ko` `*.o` `*.axf` `*.hex` 等）
+  - 清理已误提交的编译产物：`.exe` 测试二进制、内核 `.ko`/`.mod.c`、SSL man 手册、预编译库测试程序
+  - 补齐之前遗漏的源文件：MQTT/OpenSSL 头文件、LVGL v8 三方库源码、内核驱动源文件、UI 资源
+  - 配置 git 用户信息 (`44gdc6` / `wangshaopi@outlook.com`)
+  - 配置 git 代理 `127.0.0.1:7890` 解决 GitHub 直连问题
+  - 推送至 [https://github.com/44gdc6/linux-projects](https://github.com/44gdc6/linux-projects)
+- 创建/修改的文件：
+  - `.gitignore`
+  - `README.md`（完全重写）
+  - `stm32-firmware/F407/`（从 CubemxProject 迁移）
+  - `stm32-firmware/UART/`（从 CubemxProject 迁移）
+  - `project/app/include/` 下大量头文件（补追踪）
+  - `project/app/third_party/lvgl/`（补追踪）
+  - `project/app/third_party/lv_drivers/`（补追踪）
+
+### 阶段 8：安装 Superpowers 技能系统
+- **状态：** complete
+- 执行的操作：
+  - 通过 `npx superpowers-zh` 在用户级 `~/.claude/skills/` 安装 20 个 AI 编程技能
+  - 包含：brainstorming、writing-plans、executing-plans、test-driven-development、systematic-debugging、subagent-driven-development、code-review 等
+- 创建/修改的文件：
+  - `~/.claude/skills/` (20 个 skill 目录)
+  - `~/.claude/CLAUDE.md`
+
+## 测试结果（追加）
+| 测试 | 输入 | 预期结果 | 实际结果 | 状态 |
+|------|------|---------|---------|------|
+| Git push 到 GitHub | `git push origin main` | 推送成功，远程可见 | [https://github.com/44gdc6/linux-projects](https://github.com/44gdc6/linux-projects) 在线可访问 | 通过 |
+
 ## 会话：2026-05-16
 
 ### 阶段 1：现状梳理
@@ -74,8 +110,8 @@
 ## 五问重启检查
 | 问题 | 答案 |
 |------|------|
-| 我在哪里？ | 规划阶段，已完成代码现状梳理 |
-| 我要去哪里？ | 等用户确认计划后，先改 `F407`，再对齐 `F103`，最后做 `i.MX6ULL` 多节点联调 |
-| 目标是什么？ | 让 `i.MX6ULL` 能同时挂载并区分 F103/F407 两个 CAN 节点 |
-| 我学到了什么？ | 见 `findings.md` |
-| 我做了什么？ | 见上方阶段记录 |
+| 我在哪里？ | 仓库整合完成，已推送到 GitHub，等待硬件联调 |
+| 我要去哪里？ | i.MX6ULL CAN 多节点联调（阶段 9），然后稳定性验证（阶段 10） |
+| 目标是什么？ | 让 i.MX6ULL 能同时挂载并区分 F103/F407 两个 CAN 节点 |
+| 我学到了什么？ | 见 `findings.md`；本次新增：git 代理配置、编译产物清理、superpowers-zh 安装 |
+| 我做了什么？ | 仓库整合、清理编译产物、补齐源码、编写 README、推送 GitHub、安装 superpowers |
