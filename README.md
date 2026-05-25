@@ -117,7 +117,10 @@ linux-projects/
 │   ├── 14-adxl345_spi/                # ADXL345
 │   ├── 17-platform_dht11/             # DHT11
 │   ├── 18-gps/                        # GPS
-│   └── MQ-3/                          # MQ-3 酒精传感器
+│   ├── MQ-3/                          # MQ-3 酒精传感器 (IIO ADC)
+│   │   ├── mq3_drv/                    # 内核驱动 (platform + iio_channel_get)
+│   │   └── mq3_app/                    # 用户态验证程序
+│   └── MPU6050/                        # MPU6050 六轴传感器 (预留 I²C)
 │
 ├── lv_mqtt_SQ_pthread/                # 早期 MQTT + LVGL + SQLite 原型
 ├── 天气/                              # HTTP 天气 API 客户端 (api.k780.com)
@@ -162,6 +165,7 @@ main()
 | DHT11 | Platform + GPIO | `/dev/dht11_misc` | 5 字节原始帧（湿度+温度+校验） |
 | MQ-3 | IIO ADC | `/dev/mq3_misc` | `int` 原始 ADC 采样值 |
 | BEEP | GPIO | `/dev/beep_misc` | write() 非零=开，零=关 |
+| **MPU6050** | I²C | `/dev/mpu6050_misc` | 6 × `short`（accel x/y/z + gyro x/y/z） |
 
 > 详细设计见 [project/docs/driver-design.md](project/docs/driver-design.md)
 
