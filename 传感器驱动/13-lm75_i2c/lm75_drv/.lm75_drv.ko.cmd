@@ -1,0 +1,1 @@
+cmd_/home/linux/20260107/驱动/13-lm75_i2c/lm75_drv/lm75_drv.ko := arm-linux-gnueabihf-ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /home/linux/20260107/驱动/13-lm75_i2c/lm75_drv/lm75_drv.ko /home/linux/20260107/驱动/13-lm75_i2c/lm75_drv/lm75_drv.o /home/linux/20260107/驱动/13-lm75_i2c/lm75_drv/lm75_drv.mod.o
