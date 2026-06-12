@@ -242,6 +242,75 @@ python -m unittest tests.test_can_source_contracts -v
 
 ---
 
+## 项目专属 Skills
+
+本项目提供了两个 Claude Code 专属技能，用于提升开发效率。
+
+### /new-driver - 驱动开发助手
+
+快速生成符合项目规范的 misc 设备驱动模块。
+
+```bash
+/new-driver lm75          # 生成 LM75 I2C 温度传感器驱动
+/new-driver adxl345       # 生成 ADXL345 SPI 加速度计驱动
+/new-driver dht11         # 生成 DHT11 温湿度驱动
+/new-driver beep          # 生成蜂鸣器 GPIO 驱动
+```
+
+**功能：**
+- 自动检测总线类型 (I2C/SPI/GPIO/IIO)
+- 生成完整目录结构：驱动、测试程序、Makefile
+- 自动递增编号，避免冲突
+- 支持交叉编译工具链
+
+**生成内容：**
+```
+传感器驱动/<编号>-<名称>/
+├── <名称>_drv/          # 驱动源码 + Makefile
+├── <名称>_app/          # 测试程序 + Makefile
+└── README.md            # 使用说明
+```
+
+### /can-debug - CAN 协议调试
+
+分析 CAN 总线通信，验证协议一致性。
+
+```bash
+/can-debug log <文件>        # 解析 candump 日志文件
+/can-debug dump <接口>       # 实时抓取 CAN 帧
+/can-debug verify <节点>     # 验证 STM32 节点协议一致性
+/can-debug test              # 运行 Python 契约测试
+```
+
+**功能：**
+- 解析 candump 日志，输出可读格式
+- 验证帧 ID 分配 (0x100/0x200/0x300)
+- 检查心跳间隔、数据长度
+- 运行 Python 源码级契约测试
+
+**验证项：**
+- 帧 ID 是否符合协议规范
+- 心跳间隔是否稳定 (1s)
+- 命令-应答是否对应
+- 数据域长度是否为 8 字节
+
+### Skill 文件位置
+
+```
+skills/
+├── new-driver/
+│   ├── SKILL.md
+│   └── scripts/
+│       └── generate.sh
+└── can-debug/
+    ├── SKILL.md
+    └── scripts/
+        ├── parse_candump.py
+        └── verify_can.py
+```
+
+---
+
 ## 相关文档
 
 - [系统设计说明](危险品装载与驾驶舱安全监测终端项目说明.md)
