@@ -18,13 +18,13 @@ static ssize_t lm75_read(struct file *fp, char __user *puser, size_t n, loff_t *
 
     memset(&sendmsg, 0, sizeof(sendmsg));
     memset(&recvmsg, 0, sizeof(recvmsg));
-    sendmsg.addr = 0x48;
+    sendmsg.addr = 0x48;//第一次 I2C 通信（发送寄存器地址）
     tmpbuff[0] = 0x00;
     sendmsg.buf = tmpbuff;
     sendmsg.len = 1;
     plm75client->adapter->algo->master_xfer(plm75client->adapter, &sendmsg, 1);
 
-    recvmsg.addr = 0x48;
+    recvmsg.addr = 0x48;//第二次 I2C 通信（读取温度数据）
     recvmsg.flags |= I2C_M_RD;
     memset(tmpbuff, 0, sizeof(tmpbuff));
     recvmsg.buf = tmpbuff;
