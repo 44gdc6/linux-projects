@@ -66,14 +66,14 @@ static void mqtt_escape_json_string(const char *src, char *dst, size_t dst_size)
 
 static void pack_topics(mqtt_runtime_t *runtime)
 {
-    sprintf(runtime->reply_topic,
-            "$sys/%s/%s/thing/property/post/reply",
-            MQTT_PRODUCT_ID,
-            MQTT_DEVICE_NAME);
-    sprintf(runtime->publish_topic,
-            "$sys/%s/%s/thing/property/post",
-            MQTT_PRODUCT_ID,
-            MQTT_DEVICE_NAME);
+    snprintf(runtime->reply_topic, sizeof(runtime->reply_topic),
+             "$sys/%s/%s/thing/property/post/reply",
+             MQTT_PRODUCT_ID,
+             MQTT_DEVICE_NAME);
+    snprintf(runtime->publish_topic, sizeof(runtime->publish_topic),
+             "$sys/%s/%s/thing/property/post",
+             MQTT_PRODUCT_ID,
+             MQTT_DEVICE_NAME);
 }
 
 static void delivered(void *context, MQTTClient_deliveryToken dt)
@@ -92,15 +92,11 @@ static int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_mes
 
     (void)context;
     (void)topicLen;
-    printf("mqtt message arrived\n");
     LOG_INFO("mqtt message arrived: topic=%s payload_len=%d", topicName, message->payloadlen);
-    printf("topic: %s\n", topicName);
-    printf("message: ");
     payloadptr = (char *)message->payload;
     for (i = 0; i < message->payloadlen; ++i) {
-        putchar(*payloadptr++);
+        LOG_DEBUG("payload[%d]=0x%02x", i, *payloadptr++);
     }
-    putchar('\n');
 
     copy_len = message->payloadlen;
     if (copy_len >= (int)sizeof(payload_buf)) {
@@ -131,7 +127,6 @@ static void connlost(void *context, char *cause)
     if (runtime != NULL) {
         runtime->connected = 0;
     }
-    printf("mqtt connection lost: %s\n", cause == NULL ? "unknown" : cause);
     LOG_WARN("mqtt connection lost: %s", cause == NULL ? "unknown" : cause);
 }
 
@@ -148,14 +143,12 @@ static int mqtt_runtime_init(mqtt_runtime_t *runtime)
                            MQTTCLIENT_PERSISTENCE_NONE,
                            NULL);
     if (rc != MQTTCLIENT_SUCCESS) {
-        printf("mqtt create failed: %d\n", rc);
         LOG_ERROR("mqtt create failed: %d", rc);
         return -1;
     }
 
     rc = MQTTClient_setCallbacks(runtime->client, runtime, connlost, msgarrvd, delivered);
     if (rc != MQTTCLIENT_SUCCESS) {
-        printf("mqtt set callbacks failed: %d\n", rc);
         LOG_ERROR("mqtt set callbacks failed: %d", rc);
         MQTTClient_destroy(&runtime->client);
         return -1;
@@ -181,7 +174,6 @@ static int mqtt_runtime_connect(mqtt_runtime_t *runtime)
              MQTT_PRODUCT_ID);
     rc = MQTTClient_connect(runtime->client, &conn_opts);
     if (rc != MQTTCLIENT_SUCCESS) {
-        printf("mqtt connect failed: %d\n", rc);
         LOG_ERROR("mqtt connect failed: %d", rc);
         runtime->connected = 0;
         return -1;
@@ -190,7 +182,6 @@ static int mqtt_runtime_connect(mqtt_runtime_t *runtime)
 #if MQTT_ENABLE_REPLY_SUBSCRIBE
     rc = MQTTClient_subscribe(runtime->client, runtime->reply_topic, MQTT_QOS);
     if (rc != MQTTCLIENT_SUCCESS) {
-        printf("mqtt subscribe failed: %d\n", rc);
         LOG_ERROR("mqtt subscribe failed: %d", rc);
     } else {
         LOG_INFO("mqtt subscribed reply topic: %s", runtime->reply_topic);
@@ -283,15 +274,13 @@ static int mqtt_publish_temperature(mqtt_runtime_t *runtime, const data_t *sampl
     message.payload = payload;
     message.payloadlen = (int)strlen(payload);
 
-    printf("%s\n", payload);
-    LOG_INFO("mqtt publish topic=%s payload=%s", runtime->publish_topic, payload);
+    LOG_DEBUG("mqtt publish payload=%s", payload);
 
     rc = MQTTClient_publishMessage(runtime->client,
                                    runtime->publish_topic,
                                    &message,
                                    &delivery_token);
     if (rc != MQTTCLIENT_SUCCESS) {
-        printf("mqtt publish failed: %d\n", rc);
         LOG_ERROR("mqtt publish failed: %d", rc);
         runtime->connected = 0;
         return -1;
@@ -299,7 +288,6 @@ static int mqtt_publish_temperature(mqtt_runtime_t *runtime, const data_t *sampl
 
     rc = MQTTClient_waitForCompletion(runtime->client, delivery_token, MQTT_TIMEOUT_MS);
     if (rc != MQTTCLIENT_SUCCESS) {
-        printf("mqtt wait for completion failed: %d\n", rc);
         LOG_ERROR("mqtt wait for completion failed: %d", rc);
         runtime->connected = 0;
         return -1;

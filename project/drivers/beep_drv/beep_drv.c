@@ -72,27 +72,36 @@ static int beep_close(struct inode *node, struct file *fp)
 static ssize_t beep_read(struct file *fp, char __user *puser, size_t n, loff_t *off)
 {
     unsigned long nret = 0;
-    
-    nret = copy_to_user(puser, &pbeepcfg->curbeepstat, 4);
+    int status;
+
+    if (n < sizeof(status))
+        return -EINVAL;
+
+    mutex_lock(&pbeepcfg->lock);
+    status = pbeepcfg->curbeepstat;
+    mutex_unlock(&pbeepcfg->lock);
+
+    nret = copy_to_user(puser, &status, sizeof(status));
     if (nret != 0) {
-        pr_info("copy_to_user failed\n");
-        return -1;
+        pr_err("beep: copy_to_user failed: %lu\n", nret);
+        return -EFAULT;
     }
 
-    pr_info("Kernel:beep read success\n");
-
-    return 0;
+    return sizeof(status);
 }
 
 static ssize_t beep_write(struct file *fp, const char __user *puser, size_t n, loff_t *off)
 {
     int setstat = 0;
     unsigned long nret = 0;
-    
-    nret = copy_from_user(&setstat, puser, 4);
+
+    if (n < sizeof(setstat))
+        return -EINVAL;
+
+    nret = copy_from_user(&setstat, puser, sizeof(setstat));
     if (nret != 0) {
-        pr_info("copy_from_user failed\n");
-        return -1;
+        pr_err("beep: copy_from_user failed: %lu\n", nret);
+        return -EFAULT;
     }
 
     mutex_lock(&pbeepcfg->lock);
@@ -106,9 +115,7 @@ static ssize_t beep_write(struct file *fp, const char __user *puser, size_t n, l
     }
     mutex_unlock(&pbeepcfg->lock);
 
-    pr_info("Kernel:beep write success\n");
-
-    return 0;
+    return sizeof(setstat);
 }
 
 static struct file_operations fops = {
@@ -177,8 +184,8 @@ static int __init beep_drv_init(void)
     //8.增加sys调节节点
     ret = device_create_file(beep_misc.this_device, &beep_attr);
     if (ret != 0) {
-        pr_info("device_create_file failed\n");
-        return -1;
+        pr_err("beep: device_create_file failed: %d\n", ret);
+        goto err_find_resource;
     }
 
     pr_info("major:%d, minor:%d\n", MAJOR(beep_misc.this_device->devt), MINOR(beep_misc.this_device->devt));
@@ -192,7 +199,7 @@ err_find_resource:
 err_mis_register:
     kfree(pbeepcfg);
 err_kmalloc:
-    return -1;
+    return ret;
 }
 
 static void __exit beep_drv_exit(void)

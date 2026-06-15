@@ -44,3 +44,7 @@ Desktop.ini
 # Python
 __pycache__/
 *.pyc
+
+# Interview files (personal, not for repo)
+项目开发日志/面试准备-驱动工程师.md
+项目开发日志/面试回答指南.md

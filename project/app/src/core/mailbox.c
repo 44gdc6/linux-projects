@@ -2,12 +2,15 @@
 #include "core/linklist.h"
 #include "core/linkqueue.h"
 
+#include <string.h>
+#include "core/log.h"
+
 Node_t *pmailbox = NULL;
 
 int mailbox_init(void)
 {
     pmailbox = CreateEmptyLinkList();
-    
+
     return 0;
 }
 
@@ -15,9 +18,16 @@ int mailbox_add_task(const char *pthreadname, void *(*pthreadfun)(void *arg))
 {
     DataType tmptask;
 
+    if (pthreadname == NULL || pthreadfun == NULL) {
+        LOG_ERROR("mailbox: invalid parameters");
+        return -1;
+    }
+
+    memset(&tmptask, 0, sizeof(tmptask));
     tmptask.pthreadfun = pthreadfun;
     tmptask.queue = linkcreate_empty_linkqueue();
-    strcpy(tmptask.threadname, pthreadname);
+    strncpy(tmptask.threadname, pthreadname, sizeof(tmptask.threadname) - 1);
+    tmptask.threadname[sizeof(tmptask.threadname) - 1] = '\0';
 
     pthread_create(&tmptask.tid, NULL, pthreadfun, NULL);
 

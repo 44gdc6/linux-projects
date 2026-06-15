@@ -55,6 +55,14 @@ int quit_linkqueue(linkqueue_t *ptmpqueue, data_t *ptmpdata)
 {
     node_t *pfreenode = NULL;
 
+    if (ptmpqueue == NULL || ptmpdata == NULL) {
+        return -1;
+    }
+
+    if (is_empty_linkqueue(ptmpqueue)) {
+        return -1;
+    }
+
     pfreenode = ptmpqueue->phead->pnext;
     *ptmpdata = pfreenode->data;
     ptmpqueue->phead->pnext = pfreenode->pnext;

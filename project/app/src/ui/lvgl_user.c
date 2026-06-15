@@ -119,31 +119,31 @@ void my_timer(lv_timer_t *timer)
     ret = mailbox_recv_msg(&tmpdata);
     if (ret > 0) {
 
-        sprintf(tempbuff, "%.2f C (%s)",
+        snprintf(tempbuff, sizeof(tempbuff), "%.2f C (%s)",
                 tmpdata.temp,
                 temp_source_name(tmpdata.temp_source));
         lv_label_set_text(ui_TempLabel, tempbuff);
 
         if (tmpdata.hum_valid) {
-            sprintf(humbuff, " %.2f", tmpdata.hum);
+            snprintf(humbuff, sizeof(humbuff), " %.2f", tmpdata.hum);
         } else {
-            sprintf(humbuff, "N/A");
+            snprintf(humbuff, sizeof(humbuff), "N/A");
         }
         lv_label_set_text(ui_HumLabel, humbuff);
 
         if (tmpdata.alcohol_valid) {
-            sprintf(alcbuff, "%d (%s)",
+            snprintf(alcbuff, sizeof(alcbuff), "%d (%s)",
                     tmpdata.alcohol_raw,
                     alcohol_level_name((alcohol_level_t)tmpdata.alcohol_level));
         } else {
-            sprintf(alcbuff, "N/A");
+            snprintf(alcbuff, sizeof(alcbuff), "N/A");
         }
         lv_label_set_text(ui_alcLabel, alcbuff);
 
         if (tmpdata.accel_valid) {
-            sprintf(accxbuff, "%d", tmpdata.accel_x);
-            sprintf(accybuff, "%d", tmpdata.accel_y);
-            sprintf(acczbuff, "%d", tmpdata.accel_z);
+            snprintf(accxbuff, sizeof(accxbuff), "%d", tmpdata.accel_x);
+            snprintf(accybuff, sizeof(accybuff), "%d", tmpdata.accel_y);
+            snprintf(acczbuff, sizeof(acczbuff), "%d", tmpdata.accel_z);
             lv_label_set_text(ui_acceLabelx, accxbuff);
             lv_label_set_text(ui_acceLabely, accybuff);
             lv_label_set_text(ui_acceLabelz, acczbuff);

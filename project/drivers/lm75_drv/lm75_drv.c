@@ -15,29 +15,49 @@ static ssize_t lm75_read(struct file *fp, char __user *puser, size_t n, loff_t *
     unsigned long nret = 0;
     unsigned char tmpbuff[2] = {0};
     unsigned short tmpval = 0;
+    int ret;
+
+    /* 参数检查 */
+    if (n < sizeof(tmpval))
+        return -EINVAL;
 
     memset(&sendmsg, 0, sizeof(sendmsg));
     memset(&recvmsg, 0, sizeof(recvmsg));
+
+    /* 发送寄存器地址 */
     sendmsg.addr = 0x48;
     tmpbuff[0] = 0x00;
     sendmsg.buf = tmpbuff;
     sendmsg.len = 1;
-    plm75client->adapter->algo->master_xfer(plm75client->adapter, &sendmsg, 1);
+    ret = plm75client->adapter->algo->master_xfer(plm75client->adapter, &sendmsg, 1);
+    if (ret < 0) {
+        pr_err("lm75: i2c send failed: %d\n", ret);
+        return ret;
+    }
 
+    /* 读取温度数据 */
     recvmsg.addr = 0x48;
     recvmsg.flags |= I2C_M_RD;
     memset(tmpbuff, 0, sizeof(tmpbuff));
     recvmsg.buf = tmpbuff;
     recvmsg.len = 2;
-    plm75client->adapter->algo->master_xfer(plm75client->adapter, &recvmsg, 1);
-
-    tmpval = ((tmpbuff[0] << 8 | tmpbuff[1]) >> 7);
-    nret = copy_to_user(puser, &tmpval, sizeof(tmpval));
-    if (nret != 0) {
-        pr_info("copy_to_user failed\n");
+    ret = plm75client->adapter->algo->master_xfer(plm75client->adapter, &recvmsg, 1);
+    if (ret < 0) {
+        pr_err("lm75: i2c recv failed: %d\n", ret);
+        return ret;
     }
 
-    return 0;
+    /* 解析温度值 */
+    tmpval = ((tmpbuff[0] << 8 | tmpbuff[1]) >> 7);
+
+    /* 拷贝到用户空间 */
+    nret = copy_to_user(puser, &tmpval, sizeof(tmpval));
+    if (nret != 0) {
+        pr_err("lm75: copy_to_user failed: %lu\n", nret);
+        return -EFAULT;
+    }
+
+    return sizeof(tmpval);
 }
 
 static struct file_operations fops = {
@@ -54,27 +74,29 @@ static struct miscdevice lm75_misc = {
 static int lm75_probe(struct i2c_client *pclient, const struct i2c_device_id *pid)
 {
     int ret = 0;
-    
+
     plm75client = pclient;
     ret = misc_register(&lm75_misc);
     if (ret != 0) {
-        pr_info("misc_register failed\n");
-        return -1;
+        pr_err("lm75: misc_register failed: %d\n", ret);
+        return ret;
     }
 
+    pr_info("lm75: device registered, addr=0x%02x\n", pclient->addr);
     return 0;
 }
 
 static int lm75_remove(struct i2c_client *pclient)
 {
     int ret = 0;
-    
+
     ret = misc_deregister(&lm75_misc);
     if (ret != 0) {
-        pr_info("misc_deregister failed\n");
-        return -1;
+        pr_err("lm75: misc_deregister failed: %d\n", ret);
+        return ret;
     }
 
+    pr_info("lm75: device removed\n");
     return 0;
 }
 

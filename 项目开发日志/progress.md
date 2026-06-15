@@ -1,5 +1,45 @@
 # 进度日志
 
+## 会话：2026-06-14
+
+### 代码质量修复
+- **状态：** complete
+- 执行的操作：
+  - 修复 LM75 驱动：copy_to_user 返回 -EFAULT、I2C 传输错误检查
+  - 修复蜂鸣器驱动：copy_to_user/from_user 返回 -EFAULT、参数检查
+  - 修复 MQTT：sprintf → snprintf、printf → LOG_xxx
+  - 修复 LVGL：sprintf → snprintf
+  - 修复 mailbox：strcpy → strncpy + NULL 截断
+  - 修复 linkqueue：quit_linkqueue 添加空队列检查
+  - 更新 .gitignore 排除面试文件
+- 修改的文件：
+  - `project/drivers/lm75_drv/lm75_drv.c`
+  - `project/drivers/beep_drv/beep_drv.c`
+  - `project/app/src/comm/mqtt.c`
+  - `project/app/src/ui/lvgl_user.c`
+  - `project/app/src/core/mailbox.c`
+  - `project/app/src/core/linkqueue.c`
+  - `.gitignore`
+
+## 会话：2026-06-12
+
+### 项目迭代与面试准备
+- **状态：** complete
+- 执行的操作：
+  - 创建项目专属 Skills: `/new-driver` 和 `/can-debug`
+  - 添加驱动生成脚本和 CAN 调试脚本
+  - 清理 `13-lm75_i2c` 目录编译产物
+  - 整理面试题库：115 道驱动工程师面试题
+  - 更新 README 添加 Skills 使用说明
+  - 提交 git
+- 创建/修改的文件：
+  - `skills/new-driver/SKILL.md`
+  - `skills/new-driver/scripts/generate.sh`
+  - `skills/can-debug/SKILL.md`
+  - `skills/can-debug/scripts/parse_candump.py`
+  - `skills/can-debug/scripts/verify_can.py`
+  - `README.md`
+
 ## 会话：2026-05-24
 
 ### 阶段 7：仓库整合与 GitHub 发布
