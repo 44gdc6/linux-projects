@@ -4,7 +4,7 @@
 在一条 `500 kbps` 的 CAN 总线上接入 `i.MX6ULL`、`STM32F103 + TJA1050`、`STM32F407 + TJA1050` 三个节点，实现主站定向发命令、F103/F407 按节点 ID 应答，并保留两块 STM32 的串口调试能力。
 
 ## 当前阶段
-阶段 9：等待硬件联调（仓库已就绪，代码已推送 GitHub）
+阶段 9：CAN 传感器节点集成完成，等待硬件联调
 
 ## 各阶段
 ### 阶段 1：现状整理与协议定稿
@@ -49,12 +49,25 @@
 - [x] 通过 npx superpowers-zh 安装 20 个 AI 编程技能到用户级 ~/.claude/skills/
 - **状态：** complete
 
-### 阶段 9：i.MX6ULL 多节点联调
+### 阶段 9：i.MX6ULL 多节点联调 + 传感器集成
+- [x] F407 新增 DHT11 驱动 (PB6)，每 2 秒读取温湿度
+- [x] F103 新增火焰传感器驱动 (PB5)，每 2 秒读取状态
+- [x] CAN 协议扩展：新增传感器数据帧 (0x400 + node_id)
+- [x] i.MX6ULL 补齐 can_node.h，解析传感器帧
+- [x] MQTT 上传新增 dht11hum/dht11temp/flamest 属性
+- [x] main.c 注册 can_thread，修复 CAN 子系统断点
+- [x] F407/F103 启用 IWDG 硬件看门狗 (5s/8s 超时)
+- [x] GPS ATGM336H NMEA 解析集成到 gps_thread
+- [x] 电子围栏 Haversine 距离算法，50km 默认半径
+- [x] MQTT 上报 GPS 经纬度/海拔/速度/卫星数/围栏状态
 - [ ] 统一总线波特率、终端电阻、公共地
-- [ ] 用 candump 观察心跳帧
+- [ ] 用 candump 观察心跳帧 + 传感器数据帧
 - [ ] 用 cansend 分别向 F103/F407 发定向命令
 - [ ] 验证两个节点均可独立应答、互不串帧
-- **状态：** pending
+- [ ] 验证传感器数据通过 MQTT 成功上传 OneNET
+- [ ] 验证 IWDG 看门狗复位功能
+- [ ] 验证 GPS 定位和电子围栏报警
+- **状态：** in_progress（代码完成，等待硬件联调）
 
 ### 阶段 10：稳定性验证与收尾
 - [ ] 验证重复收发、掉线恢复、错误日志
@@ -85,3 +98,4 @@
 - 规划文件与正式设计/实现计划均放在 `stm32-firmware/F407/docs/` 下。
 - `UART` 工程中的 F103 已按统一协议回改，当前剩余工作集中在 `i.MX6ULL` 侧硬件联调。
 - 2026-05-24：仓库已整合推送到 [https://github.com/44gdc6/linux-projects](https://github.com/44gdc6/linux-projects)。
+- 2026-06-27：完成传感器节点集成 — F407 DHT11 (PB6) + F103 火焰传感器 (PB5)，CAN 传感器数据帧协议 V1.1，i.MX6ULL CAN 接收 + MQTT 上传。

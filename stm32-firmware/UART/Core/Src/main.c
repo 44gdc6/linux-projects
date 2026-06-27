@@ -26,6 +26,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
+#include "flame.h"
+#include "iwdg.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -112,6 +114,13 @@ int main(void)
   }
   Boot_Log("BOOT: CAN link init ok\r\n");
 
+  if (MX_IWDG_Init() != HAL_OK)
+  {
+    Boot_Log("BOOT: IWDG init failed\r\n");
+    Error_Handler();
+  }
+  Boot_Log("BOOT: IWDG init ok (8.0s timeout)\r\n");
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -119,6 +128,7 @@ int main(void)
   while (1)
   {
     CAN_Link_Process();
+    HAL_IWDG_Refresh(&hiwdg);
     HAL_Delay(10);
     /* USER CODE END WHILE */
 

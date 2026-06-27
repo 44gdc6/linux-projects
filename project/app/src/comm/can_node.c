@@ -1,10 +1,12 @@
 #include "comm/can_node.h"
 #include "config/app_config.h"
 #include "core/log.h"
+#include "core/mailbox.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/socket.h>
@@ -54,7 +56,7 @@ int can_socket_init(const char *ifname)
         return -1;
     }
 
-    struct can_filter rfilter[4];
+    struct can_filter rfilter[6];
     rfilter[0].can_id   = CAN_HEARTBEAT_ID_BASE + CAN_NODE_ID_F103;
     rfilter[0].can_mask = CAN_SFF_MASK;
     rfilter[1].can_id   = CAN_HEARTBEAT_ID_BASE + CAN_NODE_ID_F407;
@@ -63,6 +65,10 @@ int can_socket_init(const char *ifname)
     rfilter[2].can_mask = CAN_SFF_MASK;
     rfilter[3].can_id   = CAN_RESP_ID_BASE + CAN_NODE_ID_F407;
     rfilter[3].can_mask = CAN_SFF_MASK;
+    rfilter[4].can_id   = CAN_SENSOR_DATA_ID_BASE + CAN_NODE_ID_F103;
+    rfilter[4].can_mask = CAN_SFF_MASK;
+    rfilter[5].can_id   = CAN_SENSOR_DATA_ID_BASE + CAN_NODE_ID_F407;
+    rfilter[5].can_mask = CAN_SFF_MASK;
 
     if (setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter)) < 0) {
         LOG_WARN("can setsockopt filter failed, continuing without filter");
@@ -135,6 +141,30 @@ void can_parse_frame(int sock, const struct can_frame *frame)
         update_node_heartbeat(CAN_NODE_ID_F103, frame->data);
     } else if (id == (CAN_HEARTBEAT_ID_BASE + CAN_NODE_ID_F407)) {
         update_node_heartbeat(CAN_NODE_ID_F407, frame->data);
+    } else if (id == (CAN_SENSOR_DATA_ID_BASE + CAN_NODE_ID_F407)) {
+        /* F407 sensor data: DHT11 humidity/temperature */
+        data_t sample;
+        memset(&sample, 0, sizeof(sample));
+        sample.dht11_humidity = frame->data[0];
+        sample.dht11_temperature = frame->data[2];
+        sample.dht11_valid = (frame->data[4] == CAN_SENSOR_VALID_FLAG) ? 1 : 0;
+        sample.sample_time = time(NULL);
+        LOG_INFO("CAN sensor: F407 DHT11 hum=%d temp=%d valid=%d",
+                 sample.dht11_humidity, sample.dht11_temperature, sample.dht11_valid);
+        mailbox_send_msg("mqtt_thread", sample);
+        mailbox_send_msg("lvgl_thread", sample);
+        mailbox_send_msg("sqlite_thread", sample);
+    } else if (id == (CAN_SENSOR_DATA_ID_BASE + CAN_NODE_ID_F103)) {
+        /* F103 sensor data: flame status */
+        data_t sample;
+        memset(&sample, 0, sizeof(sample));
+        sample.flame_status = frame->data[0];
+        sample.flame_valid = 1;
+        sample.sample_time = time(NULL);
+        LOG_INFO("CAN sensor: F103 flame=%d", sample.flame_status);
+        mailbox_send_msg("mqtt_thread", sample);
+        mailbox_send_msg("lvgl_thread", sample);
+        mailbox_send_msg("sqlite_thread", sample);
     }
 }
 

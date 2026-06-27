@@ -30,6 +30,24 @@ typedef struct datatype {
     char weather_temp[WEATHER_FIELD_LEN];
     int temp_valid;
     temp_source_t temp_source;
+
+    /* CAN sensor data from remote nodes */
+    int dht11_humidity;
+    int dht11_temperature;
+    int dht11_valid;
+    int flame_status;
+    int flame_valid;
+
+    /* GPS data */
+    double gps_latitude;
+    double gps_longitude;
+    float gps_altitude;
+    float gps_speed;
+    float gps_course;
+    int gps_satellites;
+    int gps_valid;
+    int gps_fence_alarm;
+
     time_t sample_time;
 } data_t;
 

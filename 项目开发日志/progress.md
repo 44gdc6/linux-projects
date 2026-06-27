@@ -1,5 +1,110 @@
 # 进度日志
 
+## 会话：2026-06-27 (2)
+
+### 功能优化：IWDG 看门狗 + GPS 定位电子围栏
+
+- **状态：** complete
+- 执行的操作：
+  - **IWDG 硬件看门狗：** 为 F407 (5秒超时) 和 F103 (8秒超时) 启用独立看门狗
+  - **GPS 定位：** 移植 ATGM336H NMEA 解析到项目线程架构，新建 gps_thread
+  - **电子围栏：** 实现 Haversine 公式球面距离计算，默认西安 50km 围栏
+  - **MQTT 扩展：** 上报 GPS 经纬度、海拔、速度、卫星数、围栏状态
+- 创建/修改的文件：
+  - `stm32-firmware/F407/Core/Inc/stm32f4xx_hal_conf.h` (启用 HAL_IWDG_MODULE_ENABLED)
+  - `stm32-firmware/UART/Core/Inc/stm32f1xx_hal_conf.h` (启用 HAL_IWDG_MODULE_ENABLED)
+  - `stm32-firmware/F407/Core/Inc/iwdg.h` (新建)
+  - `stm32-firmware/F407/Core/Src/iwdg.c` (新建, LSI=32kHz, /128, reload=1250 → 5.0s)
+  - `stm32-firmware/UART/Core/Inc/iwdg.h` (新建)
+  - `stm32-firmware/UART/Core/Src/iwdg.c` (新建, LSI=40kHz, /128, reload=2500 → 8.0s)
+  - `stm32-firmware/F407/Core/Src/main.c` (IWDG init + refresh)
+  - `stm32-firmware/UART/Core/Src/main.c` (IWDG init + refresh)
+  - `project/app/include/device/sensor_gps.h` (新建, GPS 数据结构)
+  - `project/app/src/device/sensor_gps.c` (新建, NMEA $GPRMC/$GPGGA 解析)
+  - `project/app/include/service/geofence.h` (新建, 围栏 API)
+  - `project/app/src/service/geofence.c` (新建, Haversine 距离算法)
+  - `project/app/include/service/gps_service.h` (新建, gps_thread 声明)
+  - `project/app/src/service/gps_service.c` (新建, GPS 线程 + 围栏检测 + mailbox)
+  - `project/app/include/core/linkqueue.h` (data_t 新增 GPS 字段)
+  - `project/app/include/config/app_config.h` (GPS/围栏/MQTT key 配置)
+  - `project/app/src/comm/mqtt.c` (上报 GPS 数据)
+  - `project/app/src/core/main.c` (注册 gps_thread)
+  - `project/app/Makefile` (添加 sensor_gps.c, geofence.c, gps_service.c)
+
+### IWDG 参数
+
+| MCU | LSI 频率 | 预分频 | 重装载 | 超时 | 主循环喂狗周期 |
+|-----|---------|--------|--------|------|--------------|
+| F407 | 32 kHz | /128 | 1250 | 5.0s | ~10ms |
+| F103 | 40 kHz | /128 | 2500 | 8.0s | ~10ms |
+
+## 会话：2026-06-27
+
+### 阶段 9：CAN 传感器节点集成 - F407 DHT11 + F103 火焰传感器
+
+- **状态：** complete
+- **开始时间：** 2026-06-27
+- 执行的操作：
+  - **CAN 协议扩展：** 新增传感器数据帧类型 (ID = 0x400 + node_id)，保持原有心跳/应答/命令帧兼容
+  - **F407 DHT11 驱动：** 基于 SysTick/DWT 微秒延迟实现 DHT11 单总线协议 (PB6)，每 2 秒读取温湿度
+  - **F103 火焰传感器驱动：** 数字输入读取 (PB5)，低电平有效，每 2 秒上报状态
+  - **i.MX6ULL CAN 接收：** 补齐缺失的 `can_node.h`，解析传感器数据帧并通过 mailbox 转发
+  - **MQTT 上传：** 扩展 JSON payload，新增 `dht11hum`、`dht11temp`、`flamest` 属性
+  - **线程集成：** 在 `main.c` 注册 `can_thread`，修复 CAN 子系统未接入应用的断点
+- 创建/修改的文件：
+  - `stm32-firmware/F407/Core/Inc/dht11.h` (新建)
+  - `stm32-firmware/F407/Core/Src/dht11.c` (新建，~150 行)
+  - `stm32-firmware/F407/Core/Src/can.c` (添加 DHT11 传感器数据发送)
+  - `stm32-firmware/F407/Core/Src/gpio.c` (启用 GPIOB 时钟)
+  - `stm32-firmware/F407/Core/Src/main.c` (添加 DHT11 头文件)
+  - `stm32-firmware/UART/Core/Inc/flame.h` (新建)
+  - `stm32-firmware/UART/Core/Src/flame.c` (新建，~40 行)
+  - `stm32-firmware/UART/Core/Src/can.c` (添加火焰传感器数据发送)
+  - `stm32-firmware/UART/Core/Src/gpio.c` (启用 GPIOB 时钟)
+  - `stm32-firmware/UART/Core/Src/main.c` (添加 flame 头文件)
+  - `project/app/include/comm/can_node.h` (新建，修复编译断点)
+  - `project/app/include/core/linkqueue.h` (data_t 新增 CAN 传感器字段)
+  - `project/app/include/config/app_config.h` (新增 MQTT key 定义)
+  - `project/app/src/comm/can_node.c` (解析传感器帧 + mailbox 转发)
+  - `project/app/src/comm/mqtt.c` (发布火焰/DHT11 数据)
+  - `project/app/src/core/main.c` (注册 can_thread)
+  - `project/app/Makefile` (添加 can_node.c 编译)
+  - `项目开发日志/progress.md` (本条)
+
+### CAN 传感器数据帧协议 (V1.1)
+
+| 帧类型 | ID 公式 | F103 ID | F407 ID |
+|--------|---------|---------|---------|
+| 心跳 | `0x100 + node_id` | `0x101` | `0x102` |
+| 应答 | `0x200 + node_id` | `0x201` | `0x202` |
+| 命令 | `0x300 + node_id` | `0x301` | `0x302` |
+| **传感器数据** | **`0x400 + node_id`** | **`0x401`** | **`0x402`** |
+
+**F407 DHT11 帧 (0x402)：**
+
+| 字节 | 内容 |
+|------|------|
+| 0 | 湿度整数 (如 65) |
+| 1 | 湿度小数 (DHT11 为 0) |
+| 2 | 温度整数 (如 25) |
+| 3 | 温度小数 (DHT11 为 0) |
+| 4 | 有效标志 (0x01=有效, 0x00=无效) |
+| 5-7 | 保留 |
+
+**F103 火焰传感器帧 (0x401)：**
+
+| 字节 | 内容 |
+|------|------|
+| 0 | 火焰状态 (0x01=检测到火焰, 0x00=安全) |
+| 1-7 | 保留 |
+
+### 硬件连接
+
+| MCU | 传感器 | GPIO 引脚 | 说明 |
+|-----|--------|----------|------|
+| STM32F407 | DHT11 | PB6 | 数据线，开漏输出+上拉 |
+| STM32F103 | 火焰传感器 | PB5 | 数字输入，上拉，低电平有效 |
+
 ## 会话：2026-06-14
 
 ### 代码质量修复

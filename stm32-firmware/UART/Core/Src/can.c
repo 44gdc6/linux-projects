@@ -22,6 +22,7 @@
 
 /* USER CODE BEGIN 0 */
 #include "usart.h"
+#include "flame.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -36,6 +37,8 @@
 #define CAN_STATUS_OK           0x00U
 #define CAN_STATUS_BAD_CMD      0xE0U
 #define CAN_STATUS_BAD_ARG      0xE1U
+#define CAN_SENSOR_DATA_ID      0x400U
+#define CAN_SENSOR_SEND_MS      2000U
 
 typedef struct
 {
@@ -56,6 +59,7 @@ typedef struct
   uint32_t last_heartbeat_tick;
   uint32_t last_error_code;
   uint32_t last_error_status;
+  uint32_t last_sensor_send_tick;
 } CAN_LinkState_t;
 
 static CAN_LinkRxFrame_t g_can_link_rx_frame;
@@ -70,6 +74,7 @@ static HAL_StatusTypeDef CAN_Link_SendResponse(uint8_t cmd,
                                                uint8_t data1,
                                                uint8_t data2,
                                                uint8_t data3);
+static HAL_StatusTypeDef CAN_Link_SendSensorData(void);
 static void CAN_Link_HandleCommand(const CAN_RxHeaderTypeDef *rx_header,
                                    const uint8_t *rx_data);
 
@@ -326,6 +331,18 @@ static HAL_StatusTypeDef CAN_Link_SendResponse(uint8_t cmd,
   return CAN_Link_SendFrame(CAN_RESP_ID_BASE + CAN_NODE_ID, tx_data);
 }
 
+static HAL_StatusTypeDef CAN_Link_SendSensorData(void)
+{
+  uint8_t tx_data[CAN_FRAME_DLC] = {0};
+  uint8_t flame = 0;
+
+  flame = Flame_Read();
+  tx_data[0] = flame;
+
+  CAN_Link_LogFrame("CAN SENSOR TX", CAN_SENSOR_DATA_ID + CAN_NODE_ID, CAN_FRAME_DLC, tx_data);
+  return CAN_Link_SendFrame(CAN_SENSOR_DATA_ID + CAN_NODE_ID, tx_data);
+}
+
 static void CAN_Link_HandleCommand(const CAN_RxHeaderTypeDef *rx_header,
                                    const uint8_t *rx_data)
 {
@@ -409,6 +426,11 @@ HAL_StatusTypeDef CAN_Link_Init(void)
   g_can_link_state.last_heartbeat_tick = HAL_GetTick();
   g_can_link_state.last_error_code = HAL_CAN_ERROR_NONE;
   g_can_link_state.last_error_status = 0U;
+  g_can_link_state.last_sensor_send_tick = 0U;
+
+  /* Initialize flame sensor */
+  Flame_Init();
+  CAN_Link_Log("BOOT: Flame sensor init ok\r\n");
 
   filter.FilterBank = 0;
   filter.FilterMode = CAN_FILTERMODE_IDMASK;
@@ -460,13 +482,18 @@ void CAN_Link_Process(void)
     g_can_link_rx_frame.pending = 0U;
   }
 
-  if ((HAL_GetTick() - g_can_link_state.last_heartbeat_tick) < g_can_link_state.heartbeat_period_ms)
+  if ((HAL_GetTick() - g_can_link_state.last_heartbeat_tick) >= g_can_link_state.heartbeat_period_ms)
   {
-    return;
+    g_can_link_state.last_heartbeat_tick = HAL_GetTick();
+    (void)CAN_Link_SendHeartbeat();
   }
 
-  g_can_link_state.last_heartbeat_tick = HAL_GetTick();
-  (void)CAN_Link_SendHeartbeat();
+  /* Send flame sensor data every CAN_SENSOR_SEND_MS */
+  if ((HAL_GetTick() - g_can_link_state.last_sensor_send_tick) >= CAN_SENSOR_SEND_MS)
+  {
+    g_can_link_state.last_sensor_send_tick = HAL_GetTick();
+    (void)CAN_Link_SendSensorData();
+  }
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *can_handle)

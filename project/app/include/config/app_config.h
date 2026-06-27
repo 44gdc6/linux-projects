@@ -11,6 +11,14 @@
 #define WEATHER_CITY "xian"
 #define WEATHER_REFRESH_INTERVAL_SEC 600
 
+#define GPS_UART_PATH "/dev/ttymxc2"
+#define GPS_POLL_INTERVAL_SEC 1
+
+#define GEOFENCE_ENABLED 1
+#define GEOFENCE_CENTER_LAT 34.2614    /* 西安 */
+#define GEOFENCE_CENTER_LON 108.9404
+#define GEOFENCE_RADIUS_METERS 50000.0 /* 50km */
+
 #define MQTT_BROKER "tcp://183.230.40.96:1883"
 #define MQTT_DEVICE_NAME "device_01"
 #define MQTT_CLIENT_ID MQTT_DEVICE_NAME
@@ -28,6 +36,15 @@
 #define MQTT_WEATHER_CITY_KEY "wcity"
 #define MQTT_WEATHER_TEXT_KEY "wtext"
 #define MQTT_WEATHER_TEMP_KEY "wtemp"
+#define MQTT_FLAME_KEY "flamest"
+#define MQTT_DHT11_HUM_KEY "dht11hum"
+#define MQTT_DHT11_TEMP_KEY "dht11temp"
+#define MQTT_GPS_LAT_KEY "gpslat"
+#define MQTT_GPS_LON_KEY "gpslon"
+#define MQTT_GPS_ALT_KEY "gpsalt"
+#define MQTT_GPS_SPEED_KEY "gpsspd"
+#define MQTT_GPS_SAT_KEY "gpssat"
+#define MQTT_GPS_FENCE_KEY "gpsfence"
 #define MQTT_ENABLE_REPLY_SUBSCRIBE 1
 #define MQTT_QOS 0
 #define MQTT_TIMEOUT_MS 10000L

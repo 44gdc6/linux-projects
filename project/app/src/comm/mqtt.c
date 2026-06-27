@@ -263,6 +263,40 @@ static int mqtt_publish_temperature(mqtt_runtime_t *runtime, const data_t *sampl
                  weather_temp);
     }
 
+    /* CAN sensor data from remote STM32 nodes */
+    if (sample->dht11_valid) {
+        snprintf(params + strlen(params),
+                 sizeof(params) - strlen(params),
+                 ",\"%s\":{\"value\":%d},\"%s\":{\"value\":%d}",
+                 MQTT_DHT11_HUM_KEY,
+                 sample->dht11_humidity,
+                 MQTT_DHT11_TEMP_KEY,
+                 sample->dht11_temperature);
+    }
+
+    if (sample->flame_valid) {
+        snprintf(params + strlen(params),
+                 sizeof(params) - strlen(params),
+                 ",\"%s\":{\"value\":%d}",
+                 MQTT_FLAME_KEY,
+                 sample->flame_status);
+    }
+
+    /* GPS data */
+    if (sample->gps_valid) {
+        snprintf(params + strlen(params),
+                 sizeof(params) - strlen(params),
+                 ",\"%s\":{\"value\":%.6f},\"%s\":{\"value\":%.6f},"
+                 "\"%s\":{\"value\":%.1f},\"%s\":{\"value\":%.1f},"
+                 "\"%s\":{\"value\":%d},\"%s\":{\"value\":%d}",
+                 MQTT_GPS_LAT_KEY, sample->gps_latitude,
+                 MQTT_GPS_LON_KEY, sample->gps_longitude,
+                 MQTT_GPS_ALT_KEY, sample->gps_altitude,
+                 MQTT_GPS_SPEED_KEY, sample->gps_speed,
+                 MQTT_GPS_SAT_KEY, sample->gps_satellites,
+                 MQTT_GPS_FENCE_KEY, sample->gps_fence_alarm);
+    }
+
     snprintf(payload,
              sizeof(payload),
              "{\"id\":\"%d\",\"version\":\"1.0\",\"params\":{%s}}",
