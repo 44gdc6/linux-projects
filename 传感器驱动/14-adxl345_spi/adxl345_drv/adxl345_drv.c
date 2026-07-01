@@ -183,4 +183,4 @@ module_init(adxl345_drv_init);
 module_exit(adxl345_drv_exit);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("pute");
+MODULE_AUTHOR("pipi");
