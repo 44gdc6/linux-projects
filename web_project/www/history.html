@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>历史数据 - 危运安全监控平台</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body class="app-page" data-page="history">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark">危</div>
+        <div><strong>危运安全</strong><span>Ubuntu 监控端</span></div>
+      </div>
+      <nav class="side-nav" aria-label="主导航">
+        <a href="/index.html" data-nav="dashboard">实时监控</a>
+        <a class="active" href="/history.html" data-nav="history" aria-current="page">历史数据</a>
+        <a href="/alarms.html" data-nav="alarms">告警记录</a>
+        <a href="/config.html" data-nav="config">系统配置</a>
+      </nav>
+      <button class="logout-btn" id="logoutBtn">退出登录</button>
+    </aside>
+    <main class="workspace">
+      <header class="workspace-head">
+        <div>
+          <h1>历史数据</h1>
+          <p>按传感器查看最近 100 条采样记录和趋势</p>
+        </div>
+        <div class="head-status">
+          <span id="historyStatus" class="muted">等待查询</span>
+        </div>
+      </header>
+      <section class="summary-strip">
+        <div><span>记录数</span><strong id="historyCount">0</strong></div>
+        <div><span>最新采样</span><strong id="historyLatest">--</strong></div>
+        <div><span>最小值</span><strong id="historyMin">--</strong></div>
+        <div><span>最大值</span><strong id="historyMax">--</strong></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>采样趋势</h2><span>温湿度 / 酒精 / 加速度 / GPS</span></div>
+        <div class="toolbar">
+          <label><span>传感器</span><select id="sensorSelect">
+            <option value="temperature">温度</option>
+            <option value="humidity">湿度</option>
+            <option value="alcohol_raw">酒精 ADC 值</option>
+            <option value="accel_x">加速度 X</option>
+            <option value="accel_y">加速度 Y</option>
+            <option value="accel_z">加速度 Z</option>
+            <option value="gps_speed">GPS 速度</option>
+          </select></label>
+          <label><span>条数</span><select id="historyLimit">
+            <option value="50">50</option>
+            <option value="100" selected>100</option>
+            <option value="200">200</option>
+            <option value="500">500</option>
+          </select></label>
+          <button id="loadHistory" type="button">刷新数据</button>
+          <button id="exportHistory" class="secondary-btn" type="button" disabled>导出 CSV</button>
+        </div>
+        <div id="historyChart" class="history-chart"></div>
+        <pre id="historyOutput" class="jsonbox">[]</pre>
+      </section>
+    </main>
+  </div>
+  <script src="/assets/js/app.js"></script>
+</body>
+</html>

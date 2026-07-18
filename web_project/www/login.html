@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>登录 - 危运安全监控平台</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body class="login-page">
+  <main class="login-shell">
+    <section class="login-brand">
+      <div class="brand-mark">危</div>
+      <h1>危运安全监控平台</h1>
+      <p>Ubuntu 监控端 · MQTT 数据接入</p>
+      <div class="login-signal-grid" aria-hidden="true">
+        <span>MQTT</span>
+        <span>CAN</span>
+        <span>GPS</span>
+        <span>SQLite</span>
+      </div>
+    </section>
+
+    <section class="login-panel" aria-label="登录表单">
+      <div class="login-panel-head">
+        <span class="status-pill ok">本地控制台</span>
+        <span id="loginStatus" class="muted">前端演示登录，仅保护页面入口</span>
+      </div>
+      <h2>账号登录</h2>
+      <p class="muted">登录后查看设备在线状态、GPS 位置、CAN 节点和告警记录。</p>
+      <form id="loginForm">
+        <label>
+          <span>用户名</span>
+          <input id="username" name="username" autocomplete="username" placeholder="请输入用户名" required>
+        </label>
+        <label>
+          <span>密码</span>
+          <span class="password-field">
+            <input id="password" name="password" type="password" autocomplete="current-password" placeholder="请输入密码" required>
+            <button id="togglePassword" class="ghost-btn" type="button" aria-pressed="false">显示</button>
+          </span>
+        </label>
+        <label>
+          <span>接口 Token（可选）</span>
+          <input id="apiToken" name="apiToken" type="password" autocomplete="off" placeholder="启用 SENSOR_WEB_TOKEN 时填写">
+        </label>
+        <button id="loginSubmit" type="submit">登录</button>
+        <p class="muted login-security-note">生产部署请启用后端 Token、HTTPS 或网关访问控制。</p>
+        <p id="loginMessage" class="form-message" role="status"></p>
+      </form>
+    </section>
+  </main>
+  <script src="/assets/js/app.js"></script>
+</body>
+</html>

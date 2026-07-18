@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>告警记录 - 危运安全监控平台</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body class="app-page" data-page="alarms">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark">危</div>
+        <div><strong>危运安全</strong><span>Ubuntu 监控端</span></div>
+      </div>
+      <nav class="side-nav" aria-label="主导航">
+        <a href="/index.html" data-nav="dashboard">实时监控</a>
+        <a href="/history.html" data-nav="history">历史数据</a>
+        <a class="active" href="/alarms.html" data-nav="alarms" aria-current="page">告警记录</a>
+        <a href="/config.html" data-nav="config">系统配置</a>
+      </nav>
+      <button class="logout-btn" id="logoutBtn">退出登录</button>
+    </aside>
+    <main class="workspace">
+      <header class="workspace-head">
+        <div>
+          <h1>告警记录</h1>
+          <p>集中查看酒精超限、振动异常、火焰和电子围栏事件</p>
+        </div>
+        <div class="head-status">
+          <span id="alarmStatus" class="muted">等待刷新</span>
+        </div>
+      </header>
+      <section class="summary-strip alarm-summary">
+        <div><span>总告警</span><strong id="alarmTotal">0</strong></div>
+        <div><span>酒精</span><strong id="alarmAlcohol">0</strong></div>
+        <div><span>振动/围栏</span><strong><span id="alarmMotion">0</span>/<span id="alarmGeofence">0</span></strong></div>
+        <div><span>火焰</span><strong id="alarmFlame">0</strong></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>告警事件列表</h2>
+          <div class="panel-actions">
+            <select id="alarmFilter" aria-label="告警类型筛选">
+              <option value="all">全部类型</option>
+              <option value="alcohol">酒精</option>
+              <option value="motion">振动</option>
+              <option value="geofence">围栏</option>
+              <option value="flame">火焰</option>
+            </select>
+            <button id="refreshAlarms" type="button">刷新记录</button>
+          </div>
+        </div>
+        <div id="alarms" class="alarm-list"></div>
+      </section>
+    </main>
+  </div>
+  <script src="/assets/js/app.js"></script>
+</body>
+</html>

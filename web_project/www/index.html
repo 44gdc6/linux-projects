@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>实时监控 - 危运安全监控平台</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body class="app-page" data-page="dashboard">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark">危</div>
+        <div><strong>危运安全</strong><span>Ubuntu 监控端</span></div>
+      </div>
+      <nav class="side-nav" aria-label="主导航">
+        <a class="active" href="/index.html" data-nav="dashboard" aria-current="page">实时监控</a>
+        <a href="/history.html" data-nav="history">历史数据</a>
+        <a href="/alarms.html" data-nav="alarms">告警记录</a>
+        <a href="/config.html" data-nav="config">系统配置</a>
+      </nav>
+      <button class="logout-btn" id="logoutBtn">退出登录</button>
+    </aside>
+
+    <main class="workspace">
+      <header class="workspace-head">
+        <div>
+          <h1>实时监控</h1>
+          <p id="subtitle">等待 MQTT/OneNET 上报数据...</p>
+        </div>
+        <div class="head-status">
+          <span id="onlineBadge" class="status-pill neutral">离线</span>
+          <strong id="risk" class="status-pill neutral">--</strong>
+        </div>
+      </header>
+
+      <section class="summary-strip">
+        <div><span>设备</span><strong id="device">--</strong></div>
+        <div><span>最后上报</span><strong id="timestamp">--</strong></div>
+        <div><span>数据新鲜度</span><strong id="dataFreshness">--</strong></div>
+        <div><span>接入状态</span><strong id="ingestStatus">--</strong></div>
+      </section>
+
+      <section class="metric-grid">
+        <article class="metric-card"><span>温度</span><strong id="temperature">--</strong><small>℃</small></article>
+        <article class="metric-card"><span>湿度</span><strong id="humidity">--</strong><small>%</small></article>
+        <article class="metric-card"><span>酒精 ADC 值</span><strong id="alcohol">--</strong><small>raw</small></article>
+        <article class="metric-card"><span>加速度 XYZ</span><strong id="motion">--</strong><small id="motionAlarm">--</small></article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel map-panel">
+          <div class="panel-head"><h2>GPS 位置</h2><span id="speed">--</span></div>
+          <div class="map-surface">
+            <div class="map-crosshair"></div>
+            <p id="gps">--</p>
+          </div>
+          <div class="compact-stats">
+            <span>围栏 <strong id="fence">--</strong></span>
+            <span>卫星 <strong id="satellites">--</strong></span>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head"><h2>CAN 节点</h2><span id="nodeCount">0</span></div>
+          <div id="canNodes" class="node-list"></div>
+        </article>
+
+        <article class="panel operator-panel">
+          <div class="panel-head"><h2>值班状态</h2><span id="activeAlarms">0</span></div>
+          <p id="operatorHint" class="operator-hint">等待设备遥测数据...</p>
+        </article>
+
+        <article class="panel wide">
+          <div class="panel-head"><h2>最近告警</h2><a href="/alarms.html">查看全部</a></div>
+          <div id="alarms" class="alarm-list"></div>
+        </article>
+      </section>
+    </main>
+  </div>
+  <script src="/assets/js/app.js"></script>
+</body>
+</html>

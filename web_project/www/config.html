@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>系统配置 - 危运安全监控平台</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body class="app-page" data-page="config">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark">危</div>
+        <div><strong>危运安全</strong><span>Ubuntu 监控端</span></div>
+      </div>
+      <nav class="side-nav" aria-label="主导航">
+        <a href="/index.html" data-nav="dashboard">实时监控</a>
+        <a href="/history.html" data-nav="history">历史数据</a>
+        <a href="/alarms.html" data-nav="alarms">告警记录</a>
+        <a class="active" href="/config.html" data-nav="config" aria-current="page">系统配置</a>
+      </nav>
+      <button class="logout-btn" id="logoutBtn">退出登录</button>
+    </aside>
+    <main class="workspace">
+      <header class="workspace-head">
+        <div>
+          <h1>系统配置</h1>
+          <p>查看 Ubuntu Web 端配置，并预留设备参数下发入口</p>
+        </div>
+        <div class="head-status">
+          <span id="apiHealth" class="muted">检查中</span>
+        </div>
+      </header>
+      <section class="summary-strip">
+        <div><span>采集周期</span><strong id="configCollectInterval">--</strong></div>
+        <div><span>MQTT 模式</span><strong id="configMqttMode">--</strong></div>
+        <div><span>酒精阈值</span><strong id="configAlcoholHigh">--</strong></div>
+        <div><span>振动阈值</span><strong id="configMotionDelta">--</strong></div>
+      </section>
+      <section class="config-grid">
+        <article class="panel">
+          <div class="panel-head"><h2>当前 Web 配置</h2><span id="exportApiStatus" class="muted">检查导出接口</span></div>
+          <pre id="configOutput" class="jsonbox">{}</pre>
+        </article>
+        <article class="panel">
+          <h2>本地配置</h2>
+          <form class="config-form">
+            <label><span>采集周期</span><input id="collectIntervalInput" type="number" min="1" max="3600" value="1"><small>秒</small></label>
+            <label><span>酒精高阈值</span><input id="alcoholHighInput" type="number" min="0" max="65535" value="1800"><small>raw</small></label>
+            <label><span>振动阈值</span><input id="motionDeltaInput" type="number" min="0" max="100000" value="120"><small>delta</small></label>
+            <button id="saveConfig" class="secondary-btn" type="button">保存配置</button>
+            <p id="configSaveStatus" class="muted form-message">保存后会写入 Ubuntu 本地配置文件，设备 MQTT 下发尚未启用。</p>
+          </form>
+        </article>
+        <article class="panel">
+          <div class="panel-head"><h2>运行状态</h2><span id="statusHealth" class="muted">检查中</span></div>
+          <div class="status-grid">
+            <div><span>监听地址</span><strong id="statusBind">--</strong></div>
+            <div><span>接口鉴权</span><strong id="statusAuth">--</strong></div>
+            <div><span>最近遥测</span><strong id="statusTelemetry">--</strong></div>
+            <div><span>服务时间</span><strong id="statusServerTime">--</strong></div>
+            <div><span>数据库</span><strong id="statusDbPath">--</strong></div>
+            <div><span>配置文件</span><strong id="statusConfigPath">--</strong></div>
+          </div>
+          <pre id="statusOutput" class="jsonbox">{}</pre>
+        </article>
+        <article class="panel">
+          <h2>接口 Token</h2>
+          <form class="config-form">
+            <label><span>API Token</span><input id="apiTokenInput" type="password" autocomplete="off" placeholder="未保存 Token"><small>API</small></label>
+            <div class="button-row">
+              <button id="saveApiToken" class="secondary-btn" type="button">保存 Token</button>
+              <button id="clearApiToken" class="ghost-btn" type="button">清空</button>
+            </div>
+            <p id="apiTokenStatus" class="muted form-message">Token 仅保存在当前浏览器。</p>
+          </form>
+        </article>
+      </section>
+    </main>
+  </div>
+  <script src="/assets/js/app.js"></script>
+</body>
+</html>
