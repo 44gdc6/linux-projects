@@ -7,14 +7,29 @@
 本项目面向危险品运输车辆，构建一套覆盖 **装载区** 和 **驾驶舱** 两条主线的安全监测终端。
 硬件上以 **NXP i.MX6ULL**（ARM Cortex-A7）为主控运行嵌入式 Linux，通过 CAN 总线挂载
 **STM32F407 / STM32F103** 节点采集传感器数据；软件上通过 LVGL 提供本地交互界面，
-MQTT 连接 OneNET 云平台，SQLite 落盘历史记录。
+MQTT 连接 OneNET 云平台，SQLite 落盘历史记录。仓库同时包含一个运行在 Ubuntu 上的
+`web_project` 管理端，用于接收 MQTT/OneNET 转发的遥测、查询历史数据和展示监控页面。
+
+### 当前工程边界
+
+| 部分 | 运行位置 | 主要职责 |
+|------|----------|----------|
+| `project/app` | i.MX6ULL ARM Linux | 采集传感器、CAN 节点通信、风险判断、本地 LVGL、SQLite、OneNET MQTT |
+| `project/drivers` | i.MX6ULL Linux 内核 | 提供 LM75、ADXL345、DHT11、MQ-3、蜂鸣器等设备节点 |
+| `stm32-firmware` | STM32F103 / STM32F407 | CAN 从节点采集与响应主站命令 |
+| `web_project` | Ubuntu 服务器 | MQTT/OneNET 数据接入、HTTP API、SQLite 历史查询、浏览器监控 |
+
+板端负责采集和上报，Ubuntu 端负责接收、缓存、落库和 Web 展示。Web 端不读取板端共享内存、
+板端设备节点或板端 SQLite。
 
 ### 监测范围
 
 | 区域 | 传感器 | 监测项 |
 |------|--------|--------|
-| **装载区** | MQ-2（可燃气体）、DS18B20（温度）、门磁、MPU6050（振动）、烟雾传感器、火焰传感器 | 气体泄漏、温度异常、非法开门、振动、火情 |
-| **驾驶舱** | MQ-3（酒精）、AHT20（温湿度）、烟雾传感器、MAX30100（心率）、GPS、BMP280（气压） | 酒精检测、环境异常、驾驶员状态、位置追踪 |
+| **主控本地采集** | LM75、ADXL345、DHT11、MQ-3、GPS | 温度、温湿度、酒精、三轴加速度、位置 |
+| **CAN 远端节点** | STM32F103 / STM32F407、DHT11、火焰传感器 | 远端温湿度、火焰状态、节点心跳与状态 |
+| **天气服务** | HTTP 天气客户端 | 天气日期、星期、城市、天气文本、温度 |
+| **Ubuntu Web** | MQTT/OneNET 转发数据 | 实时状态、历史曲线、告警记录、CSV 导出 |
 
 ---
 
@@ -48,11 +63,14 @@ MQTT 连接 OneNET 云平台，SQLite 落盘历史记录。
                   ┌─────────────┐
                   │  OneNET 云   │
                   └──────┬──────┘
-                         │ MQTT (Ethernet)
-                  ┌──────┴──────┐
-                  │  i.MX6ULL   │  Linux 主站
-                  │  ARM Linux  │  LVGL + SQLite
-                  └──────┬──────┘
+                    MQTT │  平台数据流转 / API
+             ┌───────────┴───────────┐
+             │                       │
+      ┌──────┴──────┐         ┌──────┴──────┐
+      │  i.MX6ULL   │         │ Ubuntu Web  │
+      │  ARM Linux  │         │ web_project │
+      │ LVGL+SQLite │         │ HTTP+SQLite │
+      └──────┬──────┘         └─────────────┘
                          │ CAN 500kbps
           ┌──────────────┼──────────────┐
           │              │              │
@@ -94,6 +112,15 @@ linux-projects/
 │   ├── docs/                          # 驱动设计文档 & 验证说明
 │   └── Makefile                       # 顶层构建入口
 │
+├── web_project/                       # Ubuntu Web 管理端
+│   ├── src/                           # C HTTP 服务、接入、缓存、SQLite
+│   ├── include/                       # Web 后端头文件
+│   ├── scripts/mqtt_forward.sh        # MQTT payload 转 HTTP ingest
+│   ├── www/                           # 登录、实时、历史、告警、配置页面
+│   ├── tests/                         # payload/cache 与 Web 配置测试
+│   ├── README.md                      # Web 端部署与接口说明
+│   └── web-server-design.md           # Web 架构设计文档
+│
 ├── stm32-firmware/                    # STM32 CAN 节点固件
 │   ├── F407/                          # STM32F407ZGTx (Cortex-M4)
 │   │   ├── Core/Inc/ & Src/           # HAL 应用层 (can.c / main.c / usart.c / stm32f4xx_it.c)
@@ -126,7 +153,7 @@ linux-projects/
 ├── 天气/                              # HTTP 天气 API 客户端 (api.k780.com)
 ├── 日志/                              # 独立分级日志模块 (TRACE → FATAL)
 ├── MQTT/                              # MQTT 基础连接测试
-├── 项目开发日志/                       # 开发计划 · 进度跟踪 · 会话日志
+├── 日志/                               # 分级日志模块与项目开发记录
 └── GPS/                               # GPS 预留
 ```
 
@@ -150,6 +177,26 @@ main()
 ```
 
 线程间通过 `mailbox + linkqueue` 实现消息传递，无锁化生产者-消费者模型。
+
+### Ubuntu Web 数据链路
+
+```text
+设备端 / OneNET
+      │ MQTT 或平台数据流转
+      ▼
+Ubuntu Mosquitto / OneNET 转发
+      │ mosquitto_sub + mqtt_forward.sh
+      ▼
+POST /ingest/telemetry 或 /ingest/onenet
+      │
+      ├── realtime cache  ──► GET /api/realtime
+      ├── SQLite            ──► history / alarms / export
+      └── HTTP static UI    ──► login / dashboard / history / config
+```
+
+`web_project` 当前没有内置 MQTT C 客户端，Ubuntu 端通过
+`web_project/scripts/mqtt_forward.sh` 将 MQTT 消息转发到 C Web 后端。
+完整部署、Token、systemd 和接口示例见 [`web_project/README.md`](web_project/README.md)。
 
 ---
 
@@ -216,6 +263,30 @@ make all          # 编译 app + 全部 5 个内核驱动
 make clean        # 清理
 ```
 
+主应用 Makefile 默认使用 `arm-linux-gnueabihf-gcc`，并链接 LVGL、SQLite、Paho MQTT C、
+OpenSSL 和目标 RootFS 中的运行库。未安装交叉工具链时，`make` 会在解析阶段停止。
+
+### 编译 Ubuntu Web 管理端
+
+```bash
+cd web_project
+make clean
+make
+make test
+./bin/webserver -p 8080 -r ./www --db ./sensor_history.db --config ./web_config.json
+```
+
+默认 Web 服务只监听 `127.0.0.1`。需要局域网访问时，必须显式设置绑定地址，并同时启用后端 Token：
+
+```bash
+export SENSOR_WEB_BIND=0.0.0.0
+export SENSOR_WEB_TOKEN='换成一段长随机字符串'
+make -C web_project run
+```
+
+浏览器访问 `http://Ubuntu服务器IP:8080/login.html`。Web 端默认登录仅是前端演示门禁，
+真正的 API 和数据写入保护由 `SENSOR_WEB_TOKEN` 提供。
+
 ### 编译 STM32 固件
 
 ```bash
@@ -239,6 +310,26 @@ python -m unittest tests.test_can_multinode_source_contracts -v
 cd stm32-firmware/UART
 python -m unittest tests.test_can_source_contracts -v
 ```
+
+### 测试范围
+
+```bash
+# Linux 主应用源码级单元测试，需要主应用交叉编译器
+make -C project/app test
+
+# STM32 CAN 源码契约测试
+cd stm32-firmware/F407
+python -m unittest tests.test_can_multinode_source_contracts -v
+cd ../../
+cd stm32-firmware/UART
+python -m unittest tests.test_can_source_contracts -v
+cd ../../
+
+# Ubuntu Web payload/cache 与配置测试
+make -C web_project test
+```
+
+当前仓库还没有覆盖真实硬件到 MQTT、Ubuntu ingest、SQLite 和浏览器页面的完整端到端测试。
 
 ---
 
@@ -317,7 +408,17 @@ skills/
 - [驱动设计文档](project/docs/driver-design.md)
 - [驱动验证说明](project/docs/driver-validation.md)
 - [CAN 多节点方案设计](stm32-firmware/F407/docs/superpowers/specs/2026-05-16-imx6ull-can-multinode-design.md)
-- [项目进度日志](项目开发日志/progress.md)
+- [项目进度日志](日志/项目开发日志/progress.md)
+- [Ubuntu Web 端说明](web_project/README.md)
+- [Ubuntu Web 端架构设计](web_project/web-server-design.md)
+
+## 当前限制与上线注意
+
+- `project/app/include/config/app_config.h` 中仍包含 OneNET 连接参数，生产部署应迁移到外部配置或密钥管理，并及时轮换已暴露凭据。
+- `web_project` 的 MQTT 接入依赖外部转发脚本，长期运行建议使用 systemd、日志和失败重启策略。
+- Web 后端目前适合内网联调和演示；公网部署前需要 HTTPS、可信 CORS、设备签名或网关鉴权、速率限制和防重放。
+- 部分 Web 遥测 payload 缺字段时会按默认值写入，后续应增加字段 presence 标记或合并最近完整样本。
+- 主应用、内核驱动、STM32 固件和 Ubuntu Web 端是不同构建目标，不能用同一个编译器或同一个 `make` 入口替代。
 
 ## 许可证
 
